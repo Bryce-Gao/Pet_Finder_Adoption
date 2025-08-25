@@ -3,7 +3,7 @@ name: Deploy to Cloud Run (Prod)
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -30,11 +30,13 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Ensure required APIs (safe if already enabled)
+      - name: Enable required APIs
         run: |
-          gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
+          gcloud services enable run.googleapis.com
+          gcloud services enable artifactregistry.googleapis.com
+          gcloud services enable cloudbuild.googleapis.com
 
-      - name: Build & Push (Cloud Build → Artifact Registry)
+      - name: Build and Push image
         env:
           REGION: ${{ secrets.GCP_REGION }}
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -44,7 +46,7 @@ jobs:
         run: |
           IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${SHA}"
           gcloud builds submit --tag "$IMAGE" .
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Deploy to Cloud Run
         id: deploy
@@ -54,7 +56,8 @@ jobs:
           region: ${{ secrets.GCP_REGION }}
           image: ${{ env.IMAGE }}
           allow_unauthenticated: true
-          flags: --port=8080 --min-instances=0 --max-instances=3
+          flags: "--min-instances=0 --max-instances=3"
 
       - name: Show URL
-        run: echo "Deployed URL: ${{ steps.deploy.outputs.url }}"
+        run: |
+          echo "Deployed URL: ${{ steps.deploy.outputs.url }}"
