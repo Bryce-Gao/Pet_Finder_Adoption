@@ -30,25 +30,13 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Build and Push image
-        env:
-          REGION: ${{ secrets.GCP_REGION }}
-          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          REPO: ${{ secrets.ARTIFACT_REPO }}
-          IMAGE_NAME: ${{ secrets.CLOUD_RUN_SERVICE }}
-          SHA: ${{ github.sha }}
-        run: |
-          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${SHA}"
-          gcloud builds submit --tag "$IMAGE" .
-          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
-
-      - name: Deploy to Cloud Run
+      - name: Deploy from source (no Dockerfile needed)
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ secrets.CLOUD_RUN_SERVICE }}
-          region: ${{ secrets.GCP_REGION }}
-          image: ${{ env.IMAGE }}
+          service: ${{ secrets.CLOUD_RUN_SERVICE }}   # step7-ml-app
+          region: ${{ secrets.GCP_REGION }}           # us-central1
+          source: . 
           allow_unauthenticated: true
           flags: "--min-instances=0 --max-instances=3"
 
