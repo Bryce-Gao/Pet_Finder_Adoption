@@ -50,6 +50,22 @@ jobs:
           export_default_credentials: true
 
       - name: Configure Docker for Artifact Registry
+      - name: Debug - Test authentication and permissions
+        run: |
+          echo "=== Debug Info ==="
+          echo "Current user:"
+          gcloud config get-value account
+          echo "Current project:"
+          gcloud config get-value project
+          echo "Environment variables:"
+          echo "PROJECT_ID: ${{ env.PROJECT_ID }}"
+          echo "REGION: ${{ env.REGION }}"
+          echo "REPOSITORY: ${{ env.REPOSITORY }}"
+          echo "SERVICE_NAME: ${{ env.SERVICE_NAME }}"
+          echo "Testing gcloud access:"
+          gcloud artifacts repositories list --location=us-central1
+          echo "=== End Debug ==="
+
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       - name: Build Docker image
