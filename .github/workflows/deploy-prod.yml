@@ -1,4 +1,4 @@
-name: Deploy to Cloud Run (Prod)
+name: Deploy to Cloud Run
 
 on:
   push:
@@ -30,15 +30,14 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Deploy from source (no Dockerfile needed)
+      - name: Deploy from source
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.CLOUD_RUN_SERVICE }}   # step7-ml-app
           region: ${{ secrets.GCP_REGION }}           # us-central1
           source: . 
-          allow_unauthenticated: true
-          flags: "--min-instances=0 --max-instances=3"
+          flags: "--allow-unauthenticated --min-instances=0 --max-instances=3"
 
       - name: Show URL
         run: |
